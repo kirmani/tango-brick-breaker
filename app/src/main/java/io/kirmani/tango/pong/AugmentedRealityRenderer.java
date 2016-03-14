@@ -27,6 +27,7 @@ import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
+import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.Sphere;
 
@@ -54,9 +55,9 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     private static final float SPHERE_RADIUS = 0.05f;
     private float mBallSpeed = 0.05f;
 
-    private Object3D mObject;
-    private Pose mObjectPose;
-    private boolean mObjectPoseUpdated = false;
+    private PongWall mWall;
+    private Pose mWallPose;
+    private boolean mWallPoseUpdated = false;
 
     private Sphere mBall;
 
@@ -78,7 +79,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         getCurrentScene().addLight(light);
 
         // Build a Cube and place it initially in the origin.
-        mObject = new PongWall();
+        mWall = new PongWall();
         mBall = null;
     }
 
@@ -87,18 +88,24 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         // Update the AR object if necessary
         // Synchronize against concurrent access with the setter below.
         synchronized (this) {
-            if (mObjectPoseUpdated) {
+            if (mWallPoseUpdated) {
                 // Place the 3D object in the location of the detected plane.
-                mObject.setPosition(mObjectPose.getPosition());
-                mObject.setOrientation(mObjectPose.getOrientation());
+                mWall.setPosition(mWallPose.getPosition());
+                mWall.setOrientation(mWallPose.getOrientation());
                 // Move it forward by half of the size of the cube to make it
                 // flush with the plane surface.
-                mObjectPoseUpdated = false;
+                mWallPoseUpdated = false;
             }
             if (mBall != null) {
+                if (Vector3.distanceTo(mBall.getPosition(),
+                            mWall.getPosition()) < 0.5f) {
+                    Quaternion newOrientation =
+                        mBall.getOrientation().multiply(mWall.getOrientation());
+                    mBall.setOrientation(newOrientation.multiplyLeft(mWall.getOrientation()));
+                }
                 mBall.moveForward(-mBallSpeed);
-                if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mObject.getPosition())
-                        < Vector3.distanceTo2(mBall.getPosition(), mObject.getPosition())) {
+                if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
+                        < Vector3.distanceTo2(mBall.getPosition(), mWall.getPosition())) {
                     getCurrentScene().removeChild(mBall);
                     mBall = null;
                 }
@@ -113,9 +120,9 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
      * This is synchronized against concurrent access in the render loop above.
      */
     public synchronized void updateObjectPose(TangoPoseData planeFitPose) {
-        mObjectPose = ScenePoseCalculator.toOpenGLPose(planeFitPose);
-        getCurrentScene().addChild(mObject);
-        mObjectPoseUpdated = true;
+        mWallPose = ScenePoseCalculator.toOpenGLPose(planeFitPose);
+        getCurrentScene().addChild(mWall);
+        mWallPoseUpdated = true;
     }
 
     public synchronized void fireBall() {
