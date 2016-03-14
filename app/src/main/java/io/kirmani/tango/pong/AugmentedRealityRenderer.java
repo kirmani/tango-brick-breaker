@@ -28,7 +28,7 @@ import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.math.vector.Vector3;
-import org.rajawali3d.primitives.Cube;
+import org.rajawali3d.primitives.Sphere;
 
 import com.projecttango.rajawali.DeviceExtrinsics;
 import com.projecttango.rajawali.Pose;
@@ -51,11 +51,14 @@ import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
  * (@see AugmentedRealityActivity)
  */
 public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
-    private static final float CUBE_SIDE_LENGTH = 0.5f;
+    private static final float SPHERE_RADIUS = 0.05f;
+    private float mBallSpeed = 0.05f;
 
     private Object3D mObject;
     private Pose mObjectPose;
     private boolean mObjectPoseUpdated = false;
+
+    private Sphere mBall;
 
     public AugmentedRealityRenderer(Context context) {
         super(context);
@@ -74,26 +77,9 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         light.setPosition(3, 2, 4);
         getCurrentScene().addLight(light);
 
-        // Set-up a material: green with application of the light and
-        // instructions.
-        Material material = new Material();
-        material.setColor(0xff009900);
-        try {
-            Texture t = new Texture("instructions", R.drawable.instructions);
-            material.addTexture(t);
-        } catch (ATexture.TextureException e) {
-            e.printStackTrace();
-        }
-        material.setColorInfluence(0.1f);
-        material.enableLighting(true);
-        material.setDiffuseMethod(new DiffuseMethod.Lambert());
-
         // Build a Cube and place it initially in the origin.
-        mObject = new Cube(CUBE_SIDE_LENGTH);
-        mObject.setMaterial(material);
-        mObject.setPosition(0, 0, -3);
-        mObject.setRotation(Vector3.Axis.Z, 180);
-        getCurrentScene().addChild(mObject);
+        mObject = new PongWall();
+        mBall = null;
     }
 
     @Override
@@ -107,8 +93,15 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                 mObject.setOrientation(mObjectPose.getOrientation());
                 // Move it forward by half of the size of the cube to make it
                 // flush with the plane surface.
-                mObject.moveForward(CUBE_SIDE_LENGTH / 2.0f);
                 mObjectPoseUpdated = false;
+            }
+            if (mBall != null) {
+                mBall.moveForward(-mBallSpeed);
+                if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mObject.getPosition())
+                        < Vector3.distanceTo2(mBall.getPosition(), mObject.getPosition())) {
+                    getCurrentScene().removeChild(mBall);
+                    mBall = null;
+                }
             }
         }
 
@@ -121,7 +114,24 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
      */
     public synchronized void updateObjectPose(TangoPoseData planeFitPose) {
         mObjectPose = ScenePoseCalculator.toOpenGLPose(planeFitPose);
+        getCurrentScene().addChild(mObject);
         mObjectPoseUpdated = true;
+    }
+
+    public synchronized void fireBall() {
+        if (mBall == null) {
+            mBall = new Sphere(SPHERE_RADIUS, 20, 20);
+            Material material = new Material();
+            material.setColor(0x00FF9800);
+            material.setColorInfluence(0.5f);
+            material.enableLighting(true);
+            material.setDiffuseMethod(new DiffuseMethod.Lambert());
+            mBall.setMaterial(material);
+            mBall.setPosition(getCurrentCamera().getPosition());
+            mBall.setOrientation(getCurrentCamera().getOrientation());
+            mBall.moveForward(-SPHERE_RADIUS * 4);
+            getCurrentScene().addChild(mBall);
+        }
     }
 
     /**

@@ -85,6 +85,8 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     private Tango mTango;
     private AtomicBoolean mIsConnected = new AtomicBoolean(false);
     private double mCameraPoseTimestamp = 0;
+    private boolean mWallCreated = false;
+    private boolean mActionHandled = true;
 
     public static final TangoCoordinateFramePair FRAME_PAIR = new TangoCoordinateFramePair(
             TangoPoseData.COORDINATE_FRAME_START_OF_SERVICE,
@@ -213,6 +215,12 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                     } else {
                         Log.w(TAG, "Unable to get device pose at time: " + rgbTimestamp);
                     }
+                    if (!mActionHandled) {
+                        if (mWallCreated) {
+                            mRenderer.fireBall();
+                        }
+                        mActionHandled = true;
+                    }
                 }
             }
 
@@ -258,30 +266,34 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-            // Calculate click location in u,v (0;1) coordinates.
-            float u = motionEvent.getX() / view.getWidth();
-            float v = motionEvent.getY() / view.getHeight();
+            mActionHandled = false;
+            if (!mWallCreated) {
+                // Calculate click location in u,v (0;1) coordinates.
+                float u = motionEvent.getX() / view.getWidth();
+                float v = motionEvent.getY() / view.getHeight();
 
-            try {
-                // Fit a plane on the clicked point using the latest poiont cloud data
-                TangoPoseData planeFitPose = doFitPlane(u, v, mRenderer.getTimestamp());
+                try {
+                    // Fit a plane on the clicked point using the latest poiont cloud data
+                    TangoPoseData planeFitPose = doFitPlane(u, v, mRenderer.getTimestamp());
 
-                if (planeFitPose != null) {
-                    // Update the position of the rendered cube to the pose of the detected plane
-                    // This update is made thread safe by the renderer
-                    mRenderer.updateObjectPose(planeFitPose);
+                    if (planeFitPose != null) {
+                        // Update the position of the rendered cube to the pose of the detected plane
+                        // This update is made thread safe by the renderer
+                        mRenderer.updateObjectPose(planeFitPose);
+                        mWallCreated = true;
+                    }
+
+                } catch (TangoException t) {
+                    Toast.makeText(getApplicationContext(),
+                            R.string.failed_measurement,
+                            Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, getString(R.string.failed_measurement), t);
+                } catch (SecurityException t) {
+                    Toast.makeText(getApplicationContext(),
+                            R.string.failed_permissions,
+                            Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, getString(R.string.failed_permissions), t);
                 }
-
-            } catch (TangoException t) {
-                Toast.makeText(getApplicationContext(),
-                        R.string.failed_measurement,
-                        Toast.LENGTH_SHORT).show();
-                Log.e(TAG, getString(R.string.failed_measurement), t);
-            } catch (SecurityException t) {
-                Toast.makeText(getApplicationContext(),
-                        R.string.failed_permissions,
-                        Toast.LENGTH_SHORT).show();
-                Log.e(TAG, getString(R.string.failed_permissions), t);
             }
         }
         return true;
