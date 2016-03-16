@@ -32,8 +32,8 @@ public class PongWall extends Object3D {
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
                 PongBrick brick = new PongBrick();
-                brick.setPosition(j * PongBrick.WIDTH - ROW_BRICK_BUFFER,
-                        i * PongBrick.HEIGHT - COL_BRICK_BUFFER, 0);
+                brick.setPosition(j * PongBrick.WIDTH,
+                        i * PongBrick.HEIGHT, 0);
                 mBricks.add(brick);
                 addChild(brick);
             }

@@ -41,7 +41,15 @@ public class PongBrick extends Plane {
         material.setColorInfluence(0.5f);
         material.enableLighting(true);
         material.setDiffuseMethod(new DiffuseMethod.Lambert());
+        setMaterial(material);
+    }
 
+    public void registerHit() {
+        Material material = new Material();
+        material.setColor(0x00000000);
+        material.setColorInfluence(0.5f);
+        material.enableLighting(true);
+        material.setDiffuseMethod(new DiffuseMethod.Lambert());
         setMaterial(material);
     }
 }

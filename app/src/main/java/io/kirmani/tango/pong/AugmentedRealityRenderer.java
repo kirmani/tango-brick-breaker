@@ -18,8 +18,8 @@ package io.kirmani.tango.pong;
 import com.google.atap.tangoservice.TangoPoseData;
 
 import android.content.Context;
-
 import android.view.MotionEvent;
+import android.util.Log;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.lights.DirectionalLight;
@@ -52,6 +52,7 @@ import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
  * (@see AugmentedRealityActivity)
  */
 public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
+    private static final String TAG = AugmentedRealityRenderer.class.getSimpleName();
     private static final float SPHERE_RADIUS = 0.05f;
     private float mBallSpeed = 0.05f;
 
@@ -97,13 +98,17 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                 mWallPoseUpdated = false;
             }
             if (mBall != null) {
-                if (Vector3.distanceTo(mBall.getPosition(),
-                            mWall.getPosition()) < 0.5f) {
-                    Quaternion newOrientation =
-                        mBall.getOrientation().multiply(mWall.getOrientation());
-                    mBall.setOrientation(newOrientation.multiplyLeft(mWall.getOrientation()));
+                for (PongBrick brick : mWall.getBricks()) {
+                    if (Vector3.distanceTo(mBall.getWorldPosition(),
+                                brick.getPosition().invertAndCreate().add(mWall.getPosition())) < 0.1f) {
+                        Quaternion normal = brick.getOrientation().clone()
+                                .multiplyLeft(mWall.getOrientation());
+                        Quaternion newOrientation = mBall.getOrientation().clone().slerp(normal, 0.5f);
+                        mBall.setOrientation(newOrientation);
+                        brick.registerHit();
+                    }
                 }
-                mBall.moveForward(-mBallSpeed);
+                mBall.moveForward(mBallSpeed);
                 if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
                         < Vector3.distanceTo2(mBall.getPosition(), mWall.getPosition())) {
                     getCurrentScene().removeChild(mBall);
@@ -135,8 +140,9 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             material.setDiffuseMethod(new DiffuseMethod.Lambert());
             mBall.setMaterial(material);
             mBall.setPosition(getCurrentCamera().getPosition());
-            mBall.setOrientation(getCurrentCamera().getOrientation());
-            mBall.moveForward(-SPHERE_RADIUS * 4);
+            Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
+            mBall.setOrientation(yFlip.multiply(getCurrentCamera().getOrientation()));
+            mBall.moveForward(SPHERE_RADIUS * 4);
             getCurrentScene().addChild(mBall);
         }
     }
