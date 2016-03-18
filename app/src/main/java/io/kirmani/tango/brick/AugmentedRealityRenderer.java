@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.kirmani.tango.pong;
+
+package io.kirmani.tango.brick;
 
 import com.google.atap.tangoservice.TangoPoseData;
 
@@ -56,7 +57,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     private static final float SPHERE_RADIUS = 0.05f;
     private float mBallSpeed = 0.05f;
 
-    private PongWall mWall;
+    private BrickBreakerWall mWall;
     private Pose mWallPose;
     private boolean mWallPoseUpdated = false;
 
@@ -80,7 +81,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         getCurrentScene().addLight(light);
 
         // Build a Cube and place it initially in the origin.
-        mWall = new PongWall();
+        mWall = new BrickBreakerWall();
         mBall = null;
     }
 
@@ -98,7 +99,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                 mWallPoseUpdated = false;
             }
             if (mBall != null) {
-                for (PongBrick brick : mWall.getBricks()) {
+                for (BrickBreakerBrick brick : mWall.getBricks()) {
                     if (Vector3.distanceTo(mBall.getPosition(),
                                 brick.getPosition().invertAndCreate()
                                 .add(mWall.getPosition())) < 0.1f) {

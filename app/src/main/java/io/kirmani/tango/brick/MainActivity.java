@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.kirmani.tango.pong;
+package io.kirmani.tango.brick;
 
 import com.google.atap.tangoservice.Tango;
 import com.google.atap.tangoservice.Tango.OnTangoUpdateListener;

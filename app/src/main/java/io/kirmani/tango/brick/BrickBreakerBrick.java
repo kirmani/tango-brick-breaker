@@ -1,11 +1,11 @@
 /*
- * PongBrick.java
+ * BrickBreakerBrick.java
  * Copyright (C) 2016 kirmani <sean@kirmani.io>
  *
  * Distributed under terms of the MIT license.
  */
 
-package io.kirmani.tango.pong;
+package io.kirmani.tango.brick;
 
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
@@ -15,7 +15,7 @@ import org.rajawali3d.primitives.Plane;
 
 import java.util.Random;
 
-public class PongBrick extends Plane {
+public class BrickBreakerBrick extends Plane {
     public static float WIDTH = 0.1f;
     public static float HEIGHT = 0.05f;
 
@@ -29,7 +29,7 @@ public class PongBrick extends Plane {
         0x00FF5722, // Deep Orange
     };
 
-    public PongBrick() {
+    public BrickBreakerBrick() {
         super(WIDTH, HEIGHT, 1, 1);
 
         Random random = new Random();
