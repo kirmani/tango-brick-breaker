@@ -101,24 +101,23 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                 for (PongBrick brick : mWall.getBricks()) {
                     if (Vector3.distanceTo(mBall.getPosition(),
                                 brick.getPosition().invertAndCreate()
-                                .rotateBy(mWall.getOrientation())
                                 .add(mWall.getPosition())) < 0.1f) {
                         Quaternion normal = brick.getOrientation().clone()
                                 .multiplyLeft(mWall.getOrientation());
                         Quaternion newOrientation = mBall.getOrientation().clone()
                             .slerp(normal, 0.5f);
-                        mBall.setOrientation(newOrientation);
+                        mBall.setOrientation(normal);
                         brick.registerHit();
                     }
                 }
                 if (Vector3.distanceTo(getCurrentCamera().getPosition(),
-                            mBall.getPosition()) < 0.1f) {
+                            mBall.getPosition()) < 0.5f) {
                     Quaternion normal = getCurrentCamera().getOrientation().clone();
                     Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
                     normal.multiplyLeft(yFlip);
-                    Quaternion newOrientation = mBall.getOrientation().clone()
-                        .slerp(normal, 0.5f);
-                    mBall.setOrientation(newOrientation);
+                    // Quaternion newOrientation = mBall.getOrientation().clone()
+                    //     .slerp(normal, 0.5f);
+                    mBall.setOrientation(normal);
                 }
                 mBall.moveForward(mBallSpeed);
                 if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
@@ -154,7 +153,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             mBall.setPosition(getCurrentCamera().getPosition());
             Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
             mBall.setOrientation(yFlip.multiply(getCurrentCamera().getOrientation()));
-            mBall.moveForward(SPHERE_RADIUS * 4);
+            mBall.moveForward(0.5f);
             getCurrentScene().addChild(mBall);
         }
     }
