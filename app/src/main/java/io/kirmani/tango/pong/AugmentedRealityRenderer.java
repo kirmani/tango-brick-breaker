@@ -99,14 +99,26 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             }
             if (mBall != null) {
                 for (PongBrick brick : mWall.getBricks()) {
-                    if (Vector3.distanceTo(mBall.getWorldPosition(),
-                                brick.getPosition().invertAndCreate().add(mWall.getPosition())) < 0.1f) {
+                    if (Vector3.distanceTo(mBall.getPosition(),
+                                brick.getPosition().invertAndCreate()
+                                .rotateBy(mWall.getOrientation())
+                                .add(mWall.getPosition())) < 0.1f) {
                         Quaternion normal = brick.getOrientation().clone()
                                 .multiplyLeft(mWall.getOrientation());
-                        Quaternion newOrientation = mBall.getOrientation().clone().slerp(normal, 0.5f);
+                        Quaternion newOrientation = mBall.getOrientation().clone()
+                            .slerp(normal, 0.5f);
                         mBall.setOrientation(newOrientation);
                         brick.registerHit();
                     }
+                }
+                if (Vector3.distanceTo(getCurrentCamera().getPosition(),
+                            mBall.getPosition()) < 0.1f) {
+                    Quaternion normal = getCurrentCamera().getOrientation().clone();
+                    Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
+                    normal.multiplyLeft(yFlip);
+                    Quaternion newOrientation = mBall.getOrientation().clone()
+                        .slerp(normal, 0.5f);
+                    mBall.setOrientation(newOrientation);
                 }
                 mBall.moveForward(mBallSpeed);
                 if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
