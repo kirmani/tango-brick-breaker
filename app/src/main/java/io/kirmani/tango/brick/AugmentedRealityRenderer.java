@@ -116,8 +116,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                     Quaternion normal = getCurrentCamera().getOrientation().clone();
                     Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
                     normal.multiplyLeft(yFlip);
-                    // Quaternion newOrientation = mBall.getOrientation().clone()
-                    //     .slerp(normal, 0.5f);
+                    normal.setAll(normal.w, -normal.x, -normal.y, -normal.z);
                     mBall.setOrientation(normal);
                 }
                 mBall.moveForward(mBallSpeed);
