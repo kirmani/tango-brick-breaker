@@ -215,6 +215,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                     } else {
                         Log.w(TAG, "Unable to get device pose at time: " + rgbTimestamp);
                     }
+                    mRenderer.onPreFrame();
                     if (!mActionHandled) {
                         if (mWallCreated) {
                             mRenderer.fireBall();

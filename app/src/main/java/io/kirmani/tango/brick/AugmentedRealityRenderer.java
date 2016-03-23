@@ -85,49 +85,49 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         mBall = null;
     }
 
+    public void onPreFrame() {
+        if (mWallPoseUpdated) {
+            // Place the 3D object in the location of the detected plane.
+            mWall.setPosition(mWallPose.getPosition());
+            mWall.setOrientation(mWallPose.getOrientation());
+            // Move it forward by half of the size of the cube to make it
+            // flush with the plane surface.
+            mWallPoseUpdated = false;
+        }
+        if (mBall != null) {
+            for (BrickBreakerBrick brick : mWall.getBricks()) {
+                Vector3 brickPosition = brick.getPosition().invertAndCreate();
+                brickPosition.add(mWall.getPosition());
+                if (Vector3.distanceTo2(mBall.getPosition(), brickPosition) < 0.01f) {
+                    Quaternion normal = brick.getOrientation().clone()
+                            .multiplyLeft(mWall.getOrientation());
+                    Quaternion newOrientation = mBall.getOrientation().clone()
+                        .slerp(normal, 0.5f);
+                    mBall.setOrientation(normal);
+                    brick.registerHit();
+                }
+            }
+            if (Vector3.distanceTo2(getCurrentCamera().getPosition(),
+                        mBall.getPosition()) < 0.25f) {
+                Quaternion normal = getCurrentCamera().getOrientation().clone();
+                Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
+                normal.multiplyLeft(yFlip);
+                normal.setAll(normal.w, -normal.x, -normal.y, -normal.z);
+                mBall.setOrientation(normal);
+            }
+            mBall.moveForward(mBallSpeed);
+            if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
+                    < Vector3.distanceTo2(mBall.getPosition(), mWall.getPosition())) {
+                getCurrentScene().removeChild(mBall);
+                mBall = null;
+            }
+        }
+    }
+
     @Override
     protected void onRender(long elapsedRealTime, double deltaTime) {
         // Update the AR object if necessary
         // Synchronize against concurrent access with the setter below.
-        synchronized (this) {
-            if (mWallPoseUpdated) {
-                // Place the 3D object in the location of the detected plane.
-                mWall.setPosition(mWallPose.getPosition());
-                mWall.setOrientation(mWallPose.getOrientation());
-                // Move it forward by half of the size of the cube to make it
-                // flush with the plane surface.
-                mWallPoseUpdated = false;
-            }
-            if (mBall != null) {
-                for (BrickBreakerBrick brick : mWall.getBricks()) {
-                    if (Vector3.distanceTo(mBall.getPosition(),
-                                brick.getPosition().invertAndCreate()
-                                .add(mWall.getPosition())) < 0.1f) {
-                        Quaternion normal = brick.getOrientation().clone()
-                                .multiplyLeft(mWall.getOrientation());
-                        Quaternion newOrientation = mBall.getOrientation().clone()
-                            .slerp(normal, 0.5f);
-                        mBall.setOrientation(normal);
-                        brick.registerHit();
-                    }
-                }
-                if (Vector3.distanceTo(getCurrentCamera().getPosition(),
-                            mBall.getPosition()) < 0.5f) {
-                    Quaternion normal = getCurrentCamera().getOrientation().clone();
-                    Quaternion yFlip = new Quaternion(Vector3.Y, 180.0);
-                    normal.multiplyLeft(yFlip);
-                    normal.setAll(normal.w, -normal.x, -normal.y, -normal.z);
-                    mBall.setOrientation(normal);
-                }
-                mBall.moveForward(mBallSpeed);
-                if (Vector3.distanceTo2(getCurrentCamera().getPosition(), mWall.getPosition())
-                        < Vector3.distanceTo2(mBall.getPosition(), mWall.getPosition())) {
-                    getCurrentScene().removeChild(mBall);
-                    mBall = null;
-                }
-            }
-        }
-
         super.onRender(elapsedRealTime, deltaTime);
     }
 

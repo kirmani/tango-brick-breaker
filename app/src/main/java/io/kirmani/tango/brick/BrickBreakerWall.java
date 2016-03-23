@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BrickBreakerWall extends Object3D {
-    private static final float ROW_BRICK_BUFFER = 0.05f;
-    private static final float COL_BRICK_BUFFER = 0.05f;
+    private static final float ROW_BRICK_BUFFER = 0.005f;
+    private static final float COL_BRICK_BUFFER = 0.005f;
 
     private List<BrickBreakerBrick> mBricks;
 
@@ -32,8 +32,8 @@ public class BrickBreakerWall extends Object3D {
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
                 BrickBreakerBrick brick = new BrickBreakerBrick();
-                brick.setPosition(j * BrickBreakerBrick.WIDTH,
-                        i * BrickBreakerBrick.HEIGHT, 0);
+                brick.setPosition(j * (BrickBreakerBrick.WIDTH + ROW_BRICK_BUFFER),
+                        i * (BrickBreakerBrick.HEIGHT + COL_BRICK_BUFFER), 0);
                 mBricks.add(brick);
                 addChild(brick);
             }
