@@ -277,7 +277,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
 
                 try {
                     // Fit a plane on the clicked point using the latest poiont cloud data
-                    TangoPoseData planeFitPose = doFitPlane(u, v, mRenderer.getTimestamp());
+                    TangoPoseData planeFitPose = doFitPlane(0.5f, 0.5f, mRenderer.getTimestamp());
 
                     if (planeFitPose != null) {
                         // Update the position of the rendered cube to the pose of the detected plane

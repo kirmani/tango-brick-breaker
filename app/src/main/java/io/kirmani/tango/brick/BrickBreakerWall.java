@@ -15,9 +15,9 @@ import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.primitives.RectangularPrism;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 public class BrickBreakerWall extends Object3D {
     private static final float ROW_BRICK_BUFFER = 0.005f;
@@ -37,15 +37,15 @@ public class BrickBreakerWall extends Object3D {
         0x00FF5722, // Deep Orange
     };
 
-    private List<RectangularPrism> mBricks;
+    private Set<RectangularPrism> mBricks;
 
     public BrickBreakerWall() {
         super();
-        mBricks = new ArrayList<RectangularPrism>();
+        mBricks = new HashSet<RectangularPrism>();
         generateWall(10, 10);
     }
 
-    public List<RectangularPrism> getBricks() {
+    public Set<RectangularPrism> getBricks() {
         return mBricks;
     }
 

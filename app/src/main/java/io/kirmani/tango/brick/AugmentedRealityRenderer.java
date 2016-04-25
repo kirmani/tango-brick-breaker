@@ -23,6 +23,7 @@ import android.view.MotionEvent;
 import android.util.Log;
 
 import org.rajawali3d.Object3D;
+import org.rajawali3d.bounds.IBoundingVolume;
 import org.rajawali3d.lights.DirectionalLight;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
@@ -37,6 +38,8 @@ import com.projecttango.rajawali.DeviceExtrinsics;
 import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ScenePoseCalculator;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
+
+import java.util.Iterator;
 
 /**
  * Very simple example augmented reality renderer which displays a cube fixed in place.
@@ -106,16 +109,21 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             mWallPoseUpdated = false;
         }
         if (mBall != null) {
-            for (RectangularPrism brick : mWall.getBricks()) {
-                Vector3 brickPosition = brick.getPosition().invertAndCreate();
-                brickPosition.add(mWall.getPosition());
-                if (Vector3.distanceTo2(mBall.getPosition(), brickPosition) < 0.01f) {
+            for (Iterator<RectangularPrism> iter = mWall.getBricks().iterator(); iter.hasNext();) {
+                RectangularPrism brick = iter.next();
+                IBoundingVolume boundingBox = brick.getGeometry().getBoundingSphere();
+                // boundingBox.transform(brick.getModelMatrix().clone()
+                //         .leftMultiply(mWall.getModelMatrix()));
+                if (boundingBox.intersectsWith(mBall.getGeometry().getBoundingSphere())) {
                     Quaternion normal = brick.getOrientation().clone()
                             .multiplyLeft(mWall.getOrientation());
                     Quaternion newOrientation = mBall.getOrientation().clone()
                         .slerp(normal, 0.5f);
                     mBall.setOrientation(normal);
-                    // brick.registerHit();
+
+                    // Remove brick.
+                    iter.remove();
+                    mWall.removeChild(brick);
                 }
             }
             if (Vector3.distanceTo2(getCurrentCamera().getPosition(),
@@ -147,6 +155,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
      * This is synchronized against concurrent access in the render loop above.
      */
     public synchronized void updateObjectPose(TangoPoseData planeFitPose) {
+        getCurrentScene().removeChild(mCursor);
         mWallPose = ScenePoseCalculator.toOpenGLPose(planeFitPose);
         getCurrentScene().addChild(mWall);
         mWallPoseUpdated = true;
