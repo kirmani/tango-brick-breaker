@@ -54,8 +54,8 @@ public class BrickBreakerWall extends Object3D {
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
-                brick.setPosition(j * (BrickBreakerBrick.WIDTH + ROW_BRICK_BUFFER),
-                        i * (BrickBreakerBrick.HEIGHT + COL_BRICK_BUFFER), 0);
+                brick.setPosition(j * (WIDTH + ROW_BRICK_BUFFER),
+                        i * (HEIGHT + COL_BRICK_BUFFER), 0);
                 int colorIndex = random.nextInt(COLORS.length);
                 Material material = new Material();
                 material.setColor(COLORS[colorIndex]);
