@@ -30,6 +30,7 @@ import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.RectangularPrism;
 import org.rajawali3d.primitives.Sphere;
 
 import com.projecttango.rajawali.DeviceExtrinsics;
@@ -62,9 +63,11 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     private boolean mWallPoseUpdated = false;
 
     private Sphere mBall;
+    private Sphere mCursor;
 
     public AugmentedRealityRenderer(Context context) {
         super(context);
+        mCursor = new Sphere(SPHERE_RADIUS, 20, 20);
     }
 
     @Override
@@ -83,6 +86,14 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         // Build a Cube and place it initially in the origin.
         mWall = new BrickBreakerWall();
         mBall = null;
+
+        Material material = new Material();
+        material.setColor(0x00F44336);
+        material.setColorInfluence(0.5f);
+        material.enableLighting(true);
+        material.setDiffuseMethod(new DiffuseMethod.Lambert());
+        mCursor.setMaterial(material);
+        getCurrentScene().addChild(mCursor);
     }
 
     public void onPreFrame() {
@@ -95,7 +106,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             mWallPoseUpdated = false;
         }
         if (mBall != null) {
-            for (BrickBreakerBrick brick : mWall.getBricks()) {
+            for (RectangularPrism brick : mWall.getBricks()) {
                 Vector3 brickPosition = brick.getPosition().invertAndCreate();
                 brickPosition.add(mWall.getPosition());
                 if (Vector3.distanceTo2(mBall.getPosition(), brickPosition) < 0.01f) {
@@ -104,7 +115,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                     Quaternion newOrientation = mBall.getOrientation().clone()
                         .slerp(normal, 0.5f);
                     mBall.setOrientation(normal);
-                    brick.registerHit();
+                    // brick.registerHit();
                 }
             }
             if (Vector3.distanceTo2(getCurrentCamera().getPosition(),
@@ -139,6 +150,12 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         mWallPose = ScenePoseCalculator.toOpenGLPose(planeFitPose);
         getCurrentScene().addChild(mWall);
         mWallPoseUpdated = true;
+    }
+
+    public synchronized void drawCursor(Vector3 position) {
+        if (position != null) {
+            mCursor.setPosition(position);
+        }
     }
 
     public synchronized void fireBall() {

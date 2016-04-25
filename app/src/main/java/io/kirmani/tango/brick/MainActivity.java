@@ -34,6 +34,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
+import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.scene.ASceneFrameCallback;
 
 import java.util.ArrayList;
@@ -212,6 +213,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                         // Update the camera pose from the renderer
                         mRenderer.updateRenderCameraPose(lastFramePose, mExtrinsics);
                         mCameraPoseTimestamp = lastFramePose.timestamp;
+                        mRenderer.drawCursor(getDepthAtTouchPosition(0.5f, 0.5f, rgbTimestamp));
                     } else {
                         Log.w(TAG, "Unable to get device pose at time: " + rgbTimestamp);
                     }
@@ -298,6 +300,36 @@ public class MainActivity extends Activity implements View.OnTouchListener {
             }
         }
         return true;
+    }
+
+    /**
+     * Use the TangoSupport library with point cloud data to calculate the depth
+     * of the point closest to where the user touches the screen. It returns a
+     * Vector3 in openGL world space.
+     */
+    private Vector3 getDepthAtTouchPosition(float u, float v, double rgbTimestamp) {
+        TangoXyzIjData xyzIj = mPointCloudManager.getLatestXyzIj();
+        if (xyzIj == null) {
+            return null;
+        }
+
+        // We need to calculate the transform between the color camera at the
+        // time the user clicked and the depth camera at the time the depth
+        // cloud was acquired.
+        TangoPoseData colorTdepthPose = TangoSupport.calculateRelativePose(
+                rgbTimestamp, TangoPoseData.COORDINATE_FRAME_CAMERA_COLOR,
+                xyzIj.timestamp, TangoPoseData.COORDINATE_FRAME_CAMERA_DEPTH);
+
+        float[] point = TangoSupport.getDepthAtPointNearestNeighbor(xyzIj, mIntrinsics,
+                colorTdepthPose, u, v);
+        if (point == null) {
+            return null;
+        }
+
+        return ScenePoseCalculator.getPointInEngineFrame(
+                    new Vector3(point[0], point[1], point[2]),
+                    ScenePoseCalculator.matrixToTangoPose(mExtrinsics.getDeviceTDepthCamera()),
+                    mTango.getPoseAtTime(rgbTimestamp, FRAME_PAIR));
     }
 
     /**
