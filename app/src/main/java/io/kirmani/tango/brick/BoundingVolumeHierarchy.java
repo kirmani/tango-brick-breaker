@@ -105,5 +105,26 @@ public class BoundingVolumeHierarchy {
             }
         }
     }
+
+    public boolean intersectsWith(BoundingBox otherBoundingBox) {
+        if (mBounds.intersectsWith(otherBoundingBox)) {
+            // Intersection happened.
+            if (mLeft == null && mRight == null) {
+                // Leaf node.
+                return mObjects.get(0).getGeometry().getBoundingBox()
+                    .intersectsWith(otherBoundingBox);
+            }
+            boolean leftIntersected = false;
+            boolean rightIntersected = false;
+            if (mLeft != null) {
+                leftIntersected = mLeft.intersectsWith(otherBoundingBox);
+            }
+            if (mRight != null) {
+                rightIntersected = mRight.intersectsWith(otherBoundingBox);
+            }
+            return leftIntersected || rightIntersected;
+        }
+        return false;
+    }
 }
 
