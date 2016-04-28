@@ -31,6 +31,7 @@ import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector3;
+import org.rajawali3d.primitives.Line3D;
 import org.rajawali3d.primitives.RectangularPrism;
 import org.rajawali3d.primitives.Sphere;
 
@@ -40,6 +41,7 @@ import com.projecttango.rajawali.ScenePoseCalculator;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 
 import java.util.Iterator;
+import java.util.Stack;
 
 /**
  * Very simple example augmented reality renderer which displays a cube fixed in place.
@@ -67,10 +69,13 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
 
     private Sphere mBall;
     private Sphere mCursor;
+    private Stack<Vector3> mSelectedPoints;
+    private Line3D mSelectionLine;
 
     public AugmentedRealityRenderer(Context context) {
         super(context);
         mCursor = new Sphere(SPHERE_RADIUS, 20, 20);
+        mSelectedPoints = new Stack<Vector3>();
     }
 
     @Override
@@ -87,13 +92,12 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         getCurrentScene().addLight(light);
 
         // Build a Cube and place it initially in the origin.
-        mWall = new BrickBreakerWall();
+        mWall = new BrickBreakerWall(null, null);
         mBall = null;
 
         Material material = new Material();
         material.setColor(0x00F44336);
         material.setColorInfluence(0.5f);
-        material.enableLighting(true);
         material.setDiffuseMethod(new DiffuseMethod.Lambert());
         mCursor.setMaterial(material);
         getCurrentScene().addChild(mCursor);
@@ -107,6 +111,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             // Move it forward by half of the size of the cube to make it
             // flush with the plane surface.
             mWallPoseUpdated = false;
+            mWall.setDimensions(mSelectionLine.getPoint(0), mSelectionLine.getPoint(1));
         }
         if (mBall != null) {
             for (Iterator<RectangularPrism> iter = mWall.getBricks().iterator(); iter.hasNext();) {
@@ -182,6 +187,36 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             mBall.moveForward(0.5f);
             getCurrentScene().addChild(mBall);
         }
+    }
+
+    public void startSelecting(Vector3 start) {
+        mSelectedPoints.push(new Vector3(start));
+        mSelectedPoints.push(new Vector3(start));
+        mSelectionLine = new Line3D(mSelectedPoints, 50);
+        Material material = new Material();
+        material.setColor(0xffffff00);
+        material.setColorInfluence(0.5f);
+        mSelectionLine.setMaterial(material);
+        getCurrentScene().addChild(mSelectionLine);
+    }
+
+    public void setEndSelection(Vector3 end) {
+        if (end != null) {
+            getCurrentScene().removeChild(mSelectionLine);
+            mSelectedPoints.peek().setAll(end);
+            mSelectionLine = new Line3D(mSelectedPoints, 50);
+            Material material = new Material();
+            material.setColor(0xffffff00);
+            material.setColorInfluence(0.5f);
+            mSelectionLine.setMaterial(material);
+            getCurrentScene().addChild(mSelectionLine);
+            Log.d(TAG, String.format("Selection vector: %s -> %s", mSelectionLine.getPoint(0),
+                    mSelectionLine.getPoint(1)));
+        }
+    }
+
+    public void endSelecting() {
+        getCurrentScene().removeChild(mSelectionLine);
     }
 
     /**

@@ -13,6 +13,7 @@ import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.methods.DiffuseMethod.Toon;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.Texture;
+import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.RectangularPrism;
 
 import java.util.HashSet;
@@ -39,14 +40,17 @@ public class BrickBreakerWall extends Object3D {
 
     private Set<RectangularPrism> mBricks;
 
-    public BrickBreakerWall() {
+    public BrickBreakerWall(Vector3 bottomLeft, Vector3 topRight) {
         super();
         mBricks = new HashSet<RectangularPrism>();
-        generateWall(10, 10);
     }
 
     public Set<RectangularPrism> getBricks() {
         return mBricks;
+    }
+
+    public void setDimensions(Vector3 start, Vector3 end) {
+        generateWall(10, 10);
     }
 
     private void generateWall(int numRows, int numCols) {

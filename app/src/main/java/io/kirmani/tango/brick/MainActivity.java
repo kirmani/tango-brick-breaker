@@ -88,6 +88,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     private double mCameraPoseTimestamp = 0;
     private boolean mWallCreated = false;
     private boolean mActionHandled = true;
+    private boolean mSelecting = false;
 
     public static final TangoCoordinateFramePair FRAME_PAIR = new TangoCoordinateFramePair(
             TangoPoseData.COORDINATE_FRAME_START_OF_SERVICE,
@@ -213,13 +214,17 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                         // Update the camera pose from the renderer
                         mRenderer.updateRenderCameraPose(lastFramePose, mExtrinsics);
                         mCameraPoseTimestamp = lastFramePose.timestamp;
-                        mRenderer.drawCursor(getDepthAtTouchPosition(0.5f, 0.5f, rgbTimestamp));
+                        Vector3 cursorLocation = getDepthAtTouchPosition(0.5f, 0.5f, rgbTimestamp);
+                        mRenderer.drawCursor(cursorLocation);
+                        if (mSelecting) {
+                            mRenderer.setEndSelection(cursorLocation);
+                        }
                     } else {
                         Log.w(TAG, "Unable to get device pose at time: " + rgbTimestamp);
                     }
                     mRenderer.onPreFrame();
                     if (!mActionHandled) {
-                        if (mWallCreated) {
+                        if (mWallCreated && !mSelecting) {
                             mRenderer.fireBall();
                         }
                         mActionHandled = true;
@@ -270,7 +275,13 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     public boolean onTouch(View view, MotionEvent motionEvent) {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             mActionHandled = false;
-            if (!mWallCreated) {
+            if (!mWallCreated && !mSelecting) {
+                mRenderer.startSelecting(
+                        getDepthAtTouchPosition(0.5f, 0.5f, mRenderer.getTimestamp()));
+                mSelecting = true;
+            } else if (!mWallCreated && mSelecting) {
+                mSelecting = false;
+                mRenderer.endSelecting();
                 // Calculate click location in u,v (0;1) coordinates.
                 float u = motionEvent.getX() / view.getWidth();
                 float v = motionEvent.getY() / view.getHeight();
