@@ -63,6 +63,7 @@ import java.util.Stack;
 public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     private static final String TAG = AugmentedRealityRenderer.class.getSimpleName();
     private static final float SPHERE_RADIUS = 0.05f;
+    private static final float CURSOR_RADIUS = 0.025f;
     private float mBallSpeed = 0.05f;
 
     private BrickBreakerWall mWall;
@@ -76,7 +77,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
 
     public AugmentedRealityRenderer(Context context) {
         super(context);
-        mCursor = new Sphere(SPHERE_RADIUS, 20, 20);
+        mCursor = new Sphere(CURSOR_RADIUS, 20, 20);
         mSelectedPoints = new ArrayList<Pose>();
     }
 
