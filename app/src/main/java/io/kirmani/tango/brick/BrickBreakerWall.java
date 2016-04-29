@@ -55,17 +55,27 @@ public class BrickBreakerWall extends Object3D {
 
     public void setDimensions(Vector3 diagonal) {
         Log.d(TAG, String.format("Diagonal vector: %s", diagonal.toString()));
-        generateWall((int) Math.abs(diagonal.x / (WIDTH + COL_BRICK_BUFFER)),
-                (int) Math.abs(diagonal.y / (HEIGHT + ROW_BRICK_BUFFER)));
+        generateWall((int) (diagonal.x / (WIDTH + COL_BRICK_BUFFER)),
+                (int) (diagonal.y / (HEIGHT + ROW_BRICK_BUFFER)));
     }
 
     private void generateWall(int numRows, int numCols) {
         Log.d(TAG, String.format("Generating wall with %d rows and %d cols.", numRows, numCols));
         Random random = new Random();
-        for (int i = 0; i < numRows; i++) {
-            for (int j = 0; j < numCols; j++) {
+        boolean right = true;
+        boolean top = true;
+        if (numRows < 0) {
+            right = false;
+        }
+        if (numCols < 0) {
+            top = false;
+        }
+        for (int i = 0; i < Math.abs(numRows); i++) {
+            for (int j = 0; j < Math.abs(numCols); j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
-                brick.setPosition(i * (WIDTH + COL_BRICK_BUFFER), j * (HEIGHT + ROW_BRICK_BUFFER), 0);
+                double xPos = i * (WIDTH + COL_BRICK_BUFFER);
+                double yPos = j * (HEIGHT + ROW_BRICK_BUFFER);
+                brick.setPosition(right ? -xPos : xPos, top ? -yPos : yPos, 0);
                 int colorIndex = random.nextInt(COLORS.length);
                 Material material = new Material();
                 material.setColor(COLORS[colorIndex]);
