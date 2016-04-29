@@ -7,6 +7,8 @@
 
 package io.kirmani.tango.brick;
 
+import android.util.Log;
+
 import org.rajawali3d.Object3D;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
@@ -21,8 +23,10 @@ import java.util.Random;
 import java.util.Set;
 
 public class BrickBreakerWall extends Object3D {
-    private static final float ROW_BRICK_BUFFER = 0.005f;
-    private static final float COL_BRICK_BUFFER = 0.005f;
+    private static final String TAG = "BrickBreakerWall";
+
+    private static final double ROW_BRICK_BUFFER = 0.005;
+    private static final double COL_BRICK_BUFFER = 0.005;
 
     public static float WIDTH = 0.1f;
     public static float HEIGHT = 0.05f;
@@ -49,17 +53,19 @@ public class BrickBreakerWall extends Object3D {
         return mBricks;
     }
 
-    public void setDimensions(Vector3 start, Vector3 end) {
-        generateWall(10, 10);
+    public void setDimensions(Vector3 diagonal) {
+        Log.d(TAG, String.format("Diagonal vector: %s", diagonal.toString()));
+        generateWall((int) Math.abs(diagonal.x / (WIDTH + COL_BRICK_BUFFER)),
+                (int) Math.abs(diagonal.y / (HEIGHT + ROW_BRICK_BUFFER)));
     }
 
     private void generateWall(int numRows, int numCols) {
+        Log.d(TAG, String.format("Generating wall with %d rows and %d cols.", numRows, numCols));
         Random random = new Random();
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
-                brick.setPosition(j * (WIDTH + ROW_BRICK_BUFFER),
-                        i * (HEIGHT + COL_BRICK_BUFFER), 0);
+                brick.setPosition(i * (WIDTH + COL_BRICK_BUFFER), j * (HEIGHT + ROW_BRICK_BUFFER), 0);
                 int colorIndex = random.nextInt(COLORS.length);
                 Material material = new Material();
                 material.setColor(COLORS[colorIndex]);

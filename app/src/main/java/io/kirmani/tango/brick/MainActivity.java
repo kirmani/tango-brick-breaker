@@ -217,7 +217,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
                         Vector3 cursorLocation = getDepthAtTouchPosition(0.5f, 0.5f, rgbTimestamp);
                         mRenderer.drawCursor(cursorLocation);
                         if (mSelecting) {
-                            mRenderer.setEndSelection(cursorLocation);
+                            mRenderer.setEndSelection(doFitPlane(0.5f, 0.5f, rgbTimestamp));
                         }
                     } else {
                         Log.w(TAG, "Unable to get device pose at time: " + rgbTimestamp);
@@ -276,8 +276,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
             mActionHandled = false;
             if (!mWallCreated && !mSelecting) {
-                mRenderer.startSelecting(
-                        getDepthAtTouchPosition(0.5f, 0.5f, mRenderer.getTimestamp()));
+                mRenderer.startSelecting(doFitPlane(0.5f, 0.5f, mRenderer.getTimestamp()));
                 mSelecting = true;
             } else if (!mWallCreated && mSelecting) {
                 mSelecting = false;

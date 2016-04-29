@@ -40,7 +40,9 @@ import com.projecttango.rajawali.Pose;
 import com.projecttango.rajawali.ScenePoseCalculator;
 import com.projecttango.rajawali.ar.TangoRajawaliRenderer;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -69,13 +71,13 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
 
     private Sphere mBall;
     private Sphere mCursor;
-    private Stack<Vector3> mSelectedPoints;
+    private List<Pose> mSelectedPoints;
     private Line3D mSelectionLine;
 
     public AugmentedRealityRenderer(Context context) {
         super(context);
         mCursor = new Sphere(SPHERE_RADIUS, 20, 20);
-        mSelectedPoints = new Stack<Vector3>();
+        mSelectedPoints = new ArrayList<Pose>();
     }
 
     @Override
@@ -105,13 +107,15 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
 
     public void onPreFrame() {
         if (mWallPoseUpdated) {
-            // Place the 3D object in the location of the detected plane.
-            mWall.setPosition(mWallPose.getPosition());
-            mWall.setOrientation(mWallPose.getOrientation());
-            // Move it forward by half of the size of the cube to make it
-            // flush with the plane surface.
+            // Build wall and place at start coordinate.
+            Quaternion wallOrientation = mSelectedPoints.get(0).getOrientation().clone()
+                    .slerp(mSelectedPoints.get(1).getOrientation(), 0.5);
+            Vector3 diagonal = Vector3.subtractAndCreate(mSelectedPoints.get(0).getPosition(),
+                    mSelectedPoints.get(1).getPosition()).rotateBy(wallOrientation);
+            mWall.setDimensions(diagonal);
+            mWall.setPosition(mSelectedPoints.get(0).getPosition());
+            mWall.setOrientation(wallOrientation);
             mWallPoseUpdated = false;
-            mWall.setDimensions(mSelectionLine.getPoint(0), mSelectionLine.getPoint(1));
         }
         if (mBall != null) {
             for (Iterator<RectangularPrism> iter = mWall.getBricks().iterator(); iter.hasNext();) {
@@ -123,7 +127,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
                     Quaternion normal = brick.getOrientation().clone()
                             .multiplyLeft(mWall.getOrientation());
                     Quaternion newOrientation = mBall.getOrientation().clone()
-                        .slerp(normal, 0.5f);
+                        .slerp(normal, 0.5);
                     mBall.setOrientation(normal);
 
                     // Remove brick.
@@ -189,10 +193,13 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         }
     }
 
-    public void startSelecting(Vector3 start) {
-        mSelectedPoints.push(new Vector3(start));
-        mSelectedPoints.push(new Vector3(start));
-        mSelectionLine = new Line3D(mSelectedPoints, 50);
+    public void startSelecting(TangoPoseData start) {
+        mSelectedPoints.add(ScenePoseCalculator.toOpenGLPose(start));
+        mSelectedPoints.add(ScenePoseCalculator.toOpenGLPose(start));
+        Stack<Vector3> points = new Stack<Vector3>();
+        points.push(mSelectedPoints.get(0).getPosition());
+        points.push(mSelectedPoints.get(1).getPosition());
+        mSelectionLine = new Line3D(points, 50);
         Material material = new Material();
         material.setColor(0xffffff00);
         material.setColorInfluence(0.5f);
@@ -200,11 +207,15 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         getCurrentScene().addChild(mSelectionLine);
     }
 
-    public void setEndSelection(Vector3 end) {
+    public void setEndSelection(TangoPoseData end) {
         if (end != null) {
             getCurrentScene().removeChild(mSelectionLine);
-            mSelectedPoints.peek().setAll(end);
-            mSelectionLine = new Line3D(mSelectedPoints, 50);
+            mSelectedPoints.remove(1);
+            mSelectedPoints.add(ScenePoseCalculator.toOpenGLPose(end));
+            Stack<Vector3> points = new Stack<Vector3>();
+            points.push(mSelectedPoints.get(0).getPosition());
+            points.push(mSelectedPoints.get(1).getPosition());
+            mSelectionLine = new Line3D(points, 50);
             Material material = new Material();
             material.setColor(0xffffff00);
             material.setColorInfluence(0.5f);
