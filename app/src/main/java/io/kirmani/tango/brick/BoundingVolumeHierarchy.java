@@ -7,6 +7,8 @@
 
 package io.kirmani.tango.brick;
 
+import android.util.Log;
+
 import org.rajawali3d.Object3D;
 import org.rajawali3d.bounds.BoundingBox;
 import org.rajawali3d.math.vector.Vector3;
@@ -14,25 +16,30 @@ import org.rajawali3d.math.vector.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BoundingVolumeHierarchy {
+public class BoundingVolumeHierarchy<T extends Object3D> {
+    private static final String TAG = "BoundingVolumeHierarchy";
+
     private BoundingVolumeHierarchy mLeft;
     private BoundingVolumeHierarchy mRight;
-    private List<Object3D> mObjects;
+    private List<T> mObjects;
     private BoundingBox mBounds;
 
-    public BoundingVolumeHierarchy(List<Object3D> objects) {
+    public BoundingVolumeHierarchy(List<T> objects) {
         mLeft = null;
         mRight = null;
-        mObjects = new ArrayList<Object3D>();
+        mObjects = new ArrayList<T>();
 
         if (objects.size() == 0)
             return;
 
         // Compute Bounding Box
         mBounds = new BoundingBox(objects.get(0).getGeometry());
-        for (Object3D object : objects) {
+        mBounds.transform(objects.get(0).getModelMatrix());
+        for (T object : objects) {
             // Merge bounds.
             BoundingBox objectBounds = object.getGeometry().getBoundingBox();
+            objectBounds.transform(object.getModelMatrix());
+            Log.d(TAG, String.format("Object bounds: %s", objectBounds.toString()));
             Vector3 objectMin = objectBounds.getMin();
             Vector3 objectMax = objectBounds.getMax();
             Vector3 min = new Vector3(
@@ -69,14 +76,24 @@ public class BoundingVolumeHierarchy {
 
         // Split points into groups along the longest axis.
         sortObjectsAlongAxis(longestAxis);
-        List<Object3D> leftObjects = new ArrayList<Object3D>();
-        List<Object3D> rightObjects = new ArrayList<Object3D>();
+        List<T> leftObjects = new ArrayList<T>();
+        List<T> rightObjects = new ArrayList<T>();
         for (int i = 0; i < mObjects.size() / 2; i++) {
             leftObjects.add(mObjects.get(i));
         }
         for (int i = mObjects.size() / 2; i < mObjects.size(); i++) {
             rightObjects.add(mObjects.get(i));
         }
+
+        Log.d(TAG, "Building BVH!");
+        Log.d(TAG, String.format("Number of Objects on Left: %d", leftObjects.size()));
+        Log.d(TAG, String.format("Number of Objects on Right: %d", rightObjects.size()));
+        Log.d(TAG, String.format("Longest axis: %d", longestAxis));
+        Log.d(TAG, String.format("Longest axis length: %3.4f", longestAxisLength));
+        Log.d(TAG, String.format("Longest axis min: %3.4f", (longestAxis == 0)
+                ? min.x : (longestAxis == 1) ? min.y : min.z));
+        Log.d(TAG, String.format("Longest axis max: %3.4f", (longestAxis == 0)
+                ? max.x : (longestAxis == 1) ? max.y : max.z));
 
         // Create subtrees.
         mLeft = new BoundingVolumeHierarchy(leftObjects);
@@ -97,7 +114,7 @@ public class BoundingVolumeHierarchy {
                 if ((axis == 0 && leftCenter.x > rightCenter.x)
                         || (axis == 1 && leftCenter.y > rightCenter.y)
                         || (axis == 2 && leftCenter.z > rightCenter.z)) {
-                    Object3D temp = mObjects.get(i);
+                    T temp = mObjects.get(i);
                     mObjects.set(i, mObjects.get(i + 1));
                     mObjects.set(i + 1, temp);
                     done = false;
@@ -106,25 +123,31 @@ public class BoundingVolumeHierarchy {
         }
     }
 
-    public boolean intersectsWith(BoundingBox otherBoundingBox) {
+    public T intersectsWith(BoundingBox otherBoundingBox) {
+        Log.d(TAG, "Checking if intersection happened within bounding box...");
+        Log.d(TAG, otherBoundingBox.toString());
         if (mBounds.intersectsWith(otherBoundingBox)) {
+            Log.d(TAG, "Intersection happened within bounding box.");
             // Intersection happened.
             if (mLeft == null && mRight == null) {
                 // Leaf node.
                 return mObjects.get(0).getGeometry().getBoundingBox()
-                    .intersectsWith(otherBoundingBox);
+                    .intersectsWith(otherBoundingBox) ? mObjects.get(0) : null;
             }
-            boolean leftIntersected = false;
-            boolean rightIntersected = false;
             if (mLeft != null) {
-                leftIntersected = mLeft.intersectsWith(otherBoundingBox);
+                T leftIntersected = (T) mLeft.intersectsWith(otherBoundingBox);
+                if (leftIntersected != null) {
+                    return leftIntersected;
+                }
             }
             if (mRight != null) {
-                rightIntersected = mRight.intersectsWith(otherBoundingBox);
+                T rightIntersected = (T) mRight.intersectsWith(otherBoundingBox);
+                if (rightIntersected != null) {
+                    return rightIntersected;
+                }
             }
-            return leftIntersected || rightIntersected;
         }
-        return false;
+        return null;
     }
 }
 

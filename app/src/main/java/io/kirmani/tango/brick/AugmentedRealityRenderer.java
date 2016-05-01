@@ -119,11 +119,23 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
             mWallPoseUpdated = false;
         }
         if (mBall != null) {
+            // BoundingBox boundingBox = mBall.getGeometry().getBoundingBox();
+            // // boundingBox.transform(mWall.getModelMatrix());
+            // Object3D brick = mWall.intersectsWith(boundingBox);
+            // if (brick != null) {
+            //     Quaternion normal = brick.getOrientation().clone()
+            //             .multiplyLeft(mWall.getOrientation());
+            //     Quaternion newOrientation = mBall.getOrientation().clone()
+            //         .slerp(normal, 0.5);
+            //     mBall.setOrientation(normal);
+
+            //     // Remove brick.
+            //     // iter.remove();
+            //     mWall.removeChild(brick);
+            // }
             for (Iterator<RectangularPrism> iter = mWall.getBricks().iterator(); iter.hasNext();) {
                 RectangularPrism brick = iter.next();
                 IBoundingVolume boundingBox = brick.getGeometry().getBoundingSphere();
-                // boundingBox.transform(brick.getModelMatrix().clone()
-                //         .leftMultiply(mWall.getModelMatrix()));
                 if (boundingBox.intersectsWith(mBall.getGeometry().getBoundingSphere())) {
                     Quaternion normal = brick.getOrientation().clone()
                             .multiplyLeft(mWall.getOrientation());

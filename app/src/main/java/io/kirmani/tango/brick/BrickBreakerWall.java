@@ -10,17 +10,19 @@ package io.kirmani.tango.brick;
 import android.util.Log;
 
 import org.rajawali3d.Object3D;
+import org.rajawali3d.bounds.BoundingBox;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.methods.DiffuseMethod.Toon;
 import org.rajawali3d.materials.textures.ATexture;
+import org.rajawali3d.materials.textures.ATexture.TextureException;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.RectangularPrism;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 public class BrickBreakerWall extends Object3D {
     private static final String TAG = "BrickBreakerWall";
@@ -42,14 +44,15 @@ public class BrickBreakerWall extends Object3D {
         0x00FF5722, // Deep Orange
     };
 
-    private Set<RectangularPrism> mBricks;
+    private List<RectangularPrism> mBricks;
+    private BoundingVolumeHierarchy mBVH;
 
     public BrickBreakerWall(Vector3 bottomLeft, Vector3 topRight) {
         super();
-        mBricks = new HashSet<RectangularPrism>();
+        mBricks = new ArrayList<RectangularPrism>();
     }
 
-    public Set<RectangularPrism> getBricks() {
+    public List<RectangularPrism> getBricks() {
         return mBricks;
     }
 
@@ -70,6 +73,7 @@ public class BrickBreakerWall extends Object3D {
         if (numCols < 0) {
             top = false;
         }
+        Texture perlinNoiseTexture = new Texture("brick", PerlinNoise.generatePerlinNoiseTexture());
         for (int i = 0; i < Math.abs(numRows); i++) {
             for (int j = 0; j < Math.abs(numCols); j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
@@ -82,11 +86,24 @@ public class BrickBreakerWall extends Object3D {
                 material.setColorInfluence(0.5f);
                 material.enableLighting(true);
                 material.setDiffuseMethod(new DiffuseMethod.Lambert());
+                try {
+                    material.addTexture(perlinNoiseTexture);
+                } catch (TextureException e) {
+                    Log.e(TAG, e.toString());
+                }
                 brick.setMaterial(material);
                 mBricks.add(brick);
                 addChild(brick);
             }
         }
+        Log.d(TAG, "Building BVH...");
+        mBVH = new BoundingVolumeHierarchy(mBricks);
+        Log.d(TAG, "Finished building BVH!");
+    }
+
+    public Object3D intersectsWith(BoundingBox otherBoundingBox) {
+        Log.d(TAG, "Checking brick intersection...");
+        return mBVH.intersectsWith(otherBoundingBox);
     }
 }
 
