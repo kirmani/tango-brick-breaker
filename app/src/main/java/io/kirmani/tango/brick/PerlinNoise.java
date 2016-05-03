@@ -22,53 +22,42 @@ public class PerlinNoise {
     private static final int BITMAP_SIZE = 256;
 
     public static Bitmap generatePerlinNoiseTexture() {
-        int divisions = 4;
-        Bitmap bitmap = generateRandomNoiseTexture(divisions);
+        int width = 2;
+        int iterations = 3;
+        int weight = 1;
+        Bitmap bitmap = generateRandomNoiseTexture(width, weight);
         Canvas canvas = new Canvas(bitmap);
-        divisions /= 2;
-        int weight = 2;
-
         final Paint rectPaint = new Paint();
         rectPaint.setStyle(Style.FILL_AND_STROKE);
         rectPaint.setStrokeWidth(10);
-        while (divisions > 0) {
-            Bitmap finerNoise = generateRandomNoiseTexture(divisions);
-            for (int i = 0; i < BITMAP_SIZE; i++) {
-                for (int j = 0; j < BITMAP_SIZE; j++) {
-                    int finerColor = Color.red(finerNoise.getPixel(i, j));
-                    int currentColor = Color.red(bitmap.getPixel(i, j));
-                    int newColor = currentColor + finerColor / weight;
-                    // Log.d(TAG, String.format("Finer color: %s", finerColor));
-                    // Log.d(TAG, String.format("Current color: %s", currentColor));
-                    // Log.d(TAG, String.format("New color: %s", newColor));
-                    rectPaint.setARGB(255, newColor, newColor, newColor);
-                    canvas.drawRect(i, j, i + 1, j + 1, rectPaint);
-                }
-            }
-
+        while (iterations > 0) {
+            iterations--;
+            width *= 2;
             weight *= 2;
-            divisions /= 2;
+
+            Bitmap finerNoise = generateRandomNoiseTexture(width, weight);
+            canvas.drawBitmap(finerNoise, 0, 0, null);
         }
 
         return bitmap;
     }
 
-    private static Bitmap generateRandomNoiseTexture(int divisions) {
-        Bitmap bitmap = Bitmap.createBitmap(BITMAP_SIZE, BITMAP_SIZE, Bitmap.Config.RGB_565);
+    private static Bitmap generateRandomNoiseTexture(int size, int weight) {
+        Bitmap bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
 
         Random random = new Random();
         final Paint rectPaint = new Paint();
         rectPaint.setStyle(Style.FILL_AND_STROKE);
         rectPaint.setStrokeWidth(10);
-        for (int i = 0; i < BITMAP_SIZE; i += divisions) {
-            for (int j = 0; j < BITMAP_SIZE; j += divisions) {
+        for (int i = 0; i < size * size; i++) {
+            for (int j = 0; j < size * size; j++) {
                 int color = random.nextInt(256);
-                rectPaint.setARGB(255, color, color, color);
-                canvas.drawRect(i, j, i + divisions, j + divisions, rectPaint);
+                rectPaint.setARGB(255 / weight, color, color, color);
+                canvas.drawRect(i, j, i + 1, j + 1, rectPaint);
             }
         }
-        return bitmap;
+        return Bitmap.createScaledBitmap(bitmap, BITMAP_SIZE, BITMAP_SIZE, true);
     }
 }
 

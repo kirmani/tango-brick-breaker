@@ -34,6 +34,10 @@ public class BrickBreakerWall extends Object3D {
     public static float HEIGHT = 0.05f;
     public static float DEPTH = 0.05f;
 
+    private static final int NUM_TEXTURES = 8;
+
+    private List<Texture> mTextures;
+
     private static int[] COLORS = {
         0x00F44336, // Red
         0x00E91E63, // Pink
@@ -50,6 +54,7 @@ public class BrickBreakerWall extends Object3D {
     public BrickBreakerWall(Vector3 bottomLeft, Vector3 topRight) {
         super();
         mBricks = new ArrayList<RectangularPrism>();
+        mTextures = new ArrayList<Texture>();
     }
 
     public List<RectangularPrism> getBricks() {
@@ -60,6 +65,12 @@ public class BrickBreakerWall extends Object3D {
         Log.d(TAG, String.format("Diagonal vector: %s", diagonal.toString()));
         generateWall((int) (diagonal.x / (WIDTH + COL_BRICK_BUFFER)),
                 (int) (diagonal.y / (HEIGHT + ROW_BRICK_BUFFER)));
+    }
+
+    public void precomputeTextures() {
+        for (int i = 0; i < NUM_TEXTURES; i++) {
+            mTextures.add(new Texture("brick" + i, PerlinNoise.generatePerlinNoiseTexture()));
+        }
     }
 
     private void generateWall(int numRows, int numCols) {
@@ -73,12 +84,6 @@ public class BrickBreakerWall extends Object3D {
         if (numCols < 0) {
             top = false;
         }
-        List<Texture> textures = new ArrayList<Texture>();
-        int numTextures = ((Math.abs(numRows) * Math.abs(numCols)) / 10) + 1;
-        for (int i = 0; i < numTextures; i++) {
-            textures.add(new Texture("brick" + i, PerlinNoise.generatePerlinNoiseTexture()));
-        }
-        Log.d(TAG, String.format("Number of textures created: %d", numTextures));
         for (int i = 0; i < Math.abs(numRows); i++) {
             for (int j = 0; j < Math.abs(numCols); j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
@@ -92,7 +97,7 @@ public class BrickBreakerWall extends Object3D {
                 material.enableLighting(true);
                 material.setDiffuseMethod(new DiffuseMethod.Lambert());
                 try {
-                    material.addTexture(textures.get(random.nextInt(numTextures)));
+                    material.addTexture(mTextures.get(random.nextInt(NUM_TEXTURES)));
                 } catch (TextureException e) {
                     Log.e(TAG, e.toString());
                 }

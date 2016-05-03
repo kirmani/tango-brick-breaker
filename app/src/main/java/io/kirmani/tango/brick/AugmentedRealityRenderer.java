@@ -96,6 +96,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
 
         // Build a Cube and place it initially in the origin.
         mWall = new BrickBreakerWall(null, null);
+        mWall.precomputeTextures();
         mBall = null;
 
         Material material = new Material();
