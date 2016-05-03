@@ -73,7 +73,12 @@ public class BrickBreakerWall extends Object3D {
         if (numCols < 0) {
             top = false;
         }
-        Texture perlinNoiseTexture = new Texture("brick", PerlinNoise.generatePerlinNoiseTexture());
+        List<Texture> textures = new ArrayList<Texture>();
+        int numTextures = ((Math.abs(numRows) * Math.abs(numCols)) / 10) + 1;
+        for (int i = 0; i < numTextures; i++) {
+            textures.add(new Texture("brick" + i, PerlinNoise.generatePerlinNoiseTexture()));
+        }
+        Log.d(TAG, String.format("Number of textures created: %d", numTextures));
         for (int i = 0; i < Math.abs(numRows); i++) {
             for (int j = 0; j < Math.abs(numCols); j++) {
                 RectangularPrism brick = new RectangularPrism(WIDTH, HEIGHT, DEPTH);
@@ -87,7 +92,7 @@ public class BrickBreakerWall extends Object3D {
                 material.enableLighting(true);
                 material.setDiffuseMethod(new DiffuseMethod.Lambert());
                 try {
-                    material.addTexture(perlinNoiseTexture);
+                    material.addTexture(textures.get(random.nextInt(numTextures)));
                 } catch (TextureException e) {
                     Log.e(TAG, e.toString());
                 }

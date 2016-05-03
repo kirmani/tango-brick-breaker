@@ -22,7 +22,7 @@ public class PerlinNoise {
     private static final int BITMAP_SIZE = 256;
 
     public static Bitmap generatePerlinNoiseTexture() {
-        int divisions = 16;
+        int divisions = 4;
         Bitmap bitmap = generateRandomNoiseTexture(divisions);
         Canvas canvas = new Canvas(bitmap);
         divisions /= 2;
