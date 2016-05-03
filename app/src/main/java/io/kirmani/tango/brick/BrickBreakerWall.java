@@ -16,6 +16,7 @@ import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.methods.DiffuseMethod.Toon;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.ATexture.TextureException;
+import org.rajawali3d.materials.textures.NormalMapTexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.math.vector.Vector3;
 import org.rajawali3d.primitives.RectangularPrism;
@@ -37,6 +38,7 @@ public class BrickBreakerWall extends Object3D {
     private static final int NUM_TEXTURES = 8;
 
     private List<Texture> mTextures;
+    private List<NormalMapTexture> mNormalTextures;
 
     private static int[] COLORS = {
         0x00F44336, // Red
@@ -55,6 +57,7 @@ public class BrickBreakerWall extends Object3D {
         super();
         mBricks = new ArrayList<RectangularPrism>();
         mTextures = new ArrayList<Texture>();
+        mNormalTextures = new ArrayList<NormalMapTexture>();
     }
 
     public List<RectangularPrism> getBricks() {
@@ -70,6 +73,7 @@ public class BrickBreakerWall extends Object3D {
     public void precomputeTextures() {
         for (int i = 0; i < NUM_TEXTURES; i++) {
             mTextures.add(new Texture("brick" + i, PerlinNoise.generatePerlinNoiseTexture()));
+            mNormalTextures.add(new NormalMapTexture("normal_brick" + i, PerlinNoise.generatePerlinNoiseTexture()));
         }
     }
 
@@ -97,7 +101,9 @@ public class BrickBreakerWall extends Object3D {
                 material.enableLighting(true);
                 material.setDiffuseMethod(new DiffuseMethod.Lambert());
                 try {
-                    material.addTexture(mTextures.get(random.nextInt(NUM_TEXTURES)));
+                    int textureIndex = random.nextInt(NUM_TEXTURES);
+                    material.addTexture(mTextures.get(textureIndex));
+                    // material.addTexture(mNormalTextures.get(textureIndex));
                 } catch (TextureException e) {
                     Log.e(TAG, e.toString());
                 }

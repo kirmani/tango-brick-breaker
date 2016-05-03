@@ -24,7 +24,7 @@ import android.util.Log;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.bounds.IBoundingVolume;
-import org.rajawali3d.lights.DirectionalLight;
+import org.rajawali3d.lights.PointLight;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.methods.DiffuseMethod;
 import org.rajawali3d.materials.textures.ATexture;
@@ -69,6 +69,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     private BrickBreakerWall mWall;
     private Pose mWallPose;
     private boolean mWallPoseUpdated = false;
+    private PointLight mLight;
 
     private Sphere mBall;
     private Sphere mCursor;
@@ -88,11 +89,11 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
         super.initScene();
 
         // Add a directional light in an arbitrary direction.
-        DirectionalLight light = new DirectionalLight(1, 0.2, -1);
-        light.setColor(1, 1, 1);
-        light.setPower(0.8f);
-        light.setPosition(3, 2, 4);
-        getCurrentScene().addLight(light);
+        mLight = new PointLight();
+        mLight.setColor(1, 1, 1);
+        // mLight.setPower(0.8f);
+        // mLight.setPosition(3, 2, 4);
+        getCurrentScene().addLight(mLight);
 
         // Build a Cube and place it initially in the origin.
         mWall = new BrickBreakerWall(null, null);
@@ -108,6 +109,7 @@ public class AugmentedRealityRenderer extends TangoRajawaliRenderer {
     }
 
     public void onPreFrame() {
+        mLight.setPosition(getCurrentScene().getCamera().getPosition());
         if (mWallPoseUpdated) {
             // Build wall and place at start coordinate.
             Quaternion wallOrientation = mSelectedPoints.get(0).getOrientation().clone()
