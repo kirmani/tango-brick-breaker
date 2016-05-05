@@ -1,5 +1,5 @@
 #Augmented Reality Brick Breaker
-## Made with Google's Project Tango
+### Made with Google's Project Tango
 
 We did fill out the course instructor survey for this course. This statement reaffirms, on our honor, that we have submitted the survey.
 
